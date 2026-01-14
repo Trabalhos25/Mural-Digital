@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mural Digital da Empresa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (GRÁTIS - só Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+        }
+        
+        h1 {
+            color: #2a5298;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto 15px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background: rgba(30, 60, 114, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1e3c72;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .post-form {
+            flex: 1;
+            min-width: 350px;
+            background-color: rgba(255, 255, 255, 0.97);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .mural-container {
+            flex: 3;
+            min-width: 300px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .form-title, .mural-title {
+            color: #2a5298;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0f0f0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: #1e3c72;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(30, 60, 114, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+        
+        .image-url-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .image-url-input input {
+            flex: 1;
+        }
+        
+        .image-preview {
+            display: none;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .remove-image:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+        
+        .mural {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+            max-height: 700px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .note {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: all 0.3s;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .note:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .note-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .note.has-image .note-image {
+            display: block;
+        }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .note-author {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .note-category {
+            background-color: rgba(255, 255, 255, 0.4);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .note-content {
+            flex-grow: 1;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 1.05rem;
+        }
+        
+        .note-date {
+            font-size: 0.85rem;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: auto;
+        }
+        
+        .note-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .note:hover .note-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .action-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .filter-btn.active {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+        
+        .filter-btn:hover:not(.active) {
+            border-color: #1e3c72;
+            color: #1e3c72;
+        }
+        
+        .empty-mural {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.3rem;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-mural i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: white;
+            font-size: 1.1rem;
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .image-examples {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .image-examples p {
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .image-examples ul {
+            padding-left: 20px;
+            color: #777;
+        }
+        
+        .image-examples li {
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .mural {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .mural {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #1e3c72;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .notification.success {
+            background: #4CAF50;
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        .notification.info {
+            background: #2196F3;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-bullhorn"></i> Mural de Avisos da Empresa</h1>
+            <p class="subtitle">Compartilhe avisos importantes com toda a equipe. Acessível em PC, Notebook e Celular.</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <i class="fas fa-sticky-note"></i>
+                    <span id="total-posts">0</span> Avisos
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-image"></i>
+                    <span id="total-images">0</span> Com Imagens
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-user-friends"></i>
+                    <span id="total-authors">0</span> Colaboradores
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="post-form">
+                <h2 class="form-title"><i class="fas fa-plus-circle"></i> Novo Aviso</h2>
+                <form id="postForm">
+                    <div class="form-group">
+                        <label for="author"><i class="fas fa-user"></i> Seu Nome/Setor</label>
+                        <input type="text" id="author" placeholder="Ex: João (RH) ou Departamento Financeiro" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category"><i class="fas fa-tag"></i> Tipo de Aviso</label>
+                        <select id="category" required>
+                            <option value="">Selecione uma categoria</option>
+                            <option value="🔄 Reunião">🔄 Reunião</option>
+                            <option value="⚠️ Aviso Importante">⚠️ Aviso Importante</option>
+                            <option value="🎉 Aniversário">🎉 Aniversário</option>
+                            <option value="📚 Treinamento">📚 Treinamento</option>
+                            <option value="🏖️ Feriado">🏖️ Feriado</option>
+                            <option value="📋 Procedimento">📋 Procedimento</option>
+                            <option value="💡 Dica">💡 Dica</option>
+                            <option value="❓ Dúvida">❓ Dúvida</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="content"><i class="fas fa-comment-dots"></i> Mensagem do Aviso</label>
+                        <textarea id="content" placeholder="Digite aqui o seu aviso importante para a equipe..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Adicionar Imagem (Opcional)</label>
+                        <p><small>Cole o link de uma imagem da internet</small></p>
+                        <div class="image-url-input">
+                            <input type="text" id="imageUrl" placeholder="https://exemplo.com/imagem.jpg">
+                            <button type="button" class="btn" onclick="previewImageUrl()" style="width: auto; padding: 0 20px;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="image-examples">
+                            <p><strong>Sugestões de como carrega a imagem no post:</strong></p>
+                            <ul>
+                                <li>No Computador<small>Pesquise uma imagem na internet, click com o Botão direito, vá em "Copiar link de Imagem...</small></li>
+                                <li>No Celular<small>1. Pressione e segure na imagem
+                              2. Escolha "Copiar URL da imagem...</small></li>
+                                
+                            </ul>
+                        </div>
+                        
+                        <div class="image-preview" id="imagePreview">
+                            <button type="button" class="remove-image" onclick="removeImagePreview()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <img id="previewImage" src="" alt="Prévia da imagem">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-palette"></i> Cor do Aviso</label>
+                        <div class="color-options">
+                            <div class="color-option selected" style="background-color: #FFEB3B;" data-color="#FFEB3B" title="Atenção"></div>
+                            <div class="color-option" style="background-color: #81C784;" data-color="#81C784" title="Confirmado"></div>
+                            <div class="color-option" style="background-color: #64B5F6;" data-color="#64B5F6" title="Informação"></div>
+                            <div class="color-option" style="background-color: #FF8A65;" data-color="#FF8A65" title="Urgente"></div>
+                            <div class="color-option" style="background-color: #BA68C8;" data-color="#BA68C8" title="Celebração"></div>
+                        </div>
+                        <input type="hidden" id="color" value="#FFEB3B">
+                    </div>
+                    
+                    <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> Publicar no Mural</button>
+                    <button type="button" class="btn btn-secondary" id="clearForm"><i class="fas fa-broom"></i> Limpar Formulário</button>
+                </form>
+            </div>
+            
+            <div class="mural-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h2 class="mural-title"><i class="fas fa-thumbtack"></i> Avisos Recentes</h2>
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">Todos</button>
+                        <button class="filter-btn" data-filter="image">Com Imagem</button>
+                        <button class="filter-btn" data-filter="urgent">Urgentes</button>
+                        <button class="filter-btn" data-filter="meeting">Reuniões</button>
+                    </div>
+                </div>
+                
+                <div class="mural" id="mural">
+                    <div class="loading" id="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Carregando avisos...</p>
+                    </div>
+                    <!-- Avisos carregados automaticamente do Firebase -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><i class="fas fa-building"></i> Mural Digital &copy; 2026</p>
+            <p><i class="fas fa-sync-alt"></i> Atualizado em tempo real | <i class="fas fa-mobile-alt"></i> Compatível com todos os dispositivos</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO DO FIREBASE (SÓ FIRESTORE - GRÁTIS)
+        // ============================================
+        
+        // SUAS CONFIGURAÇÕES DO FIREBASE AQUI:
+        const firebaseConfig = {
+  apiKey: "AIzaSyBWNTflP-1N8wjbTk0K_3mSN_fko-Tyb8o",
+  authDomain: "mural-digital-empresa.firebaseapp.com",
+  projectId: "mural-digital-empresa",
+  storageBucket: "mural-digital-empresa.firebasestorage.app",
+  messagingSenderId: "1062987135790",
+  appId: "1:1062987135790:web:c969ad3d9332f2023b58bf"
+};
+        
+        // Inicializar Firebase (só Firestore)
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // ============================================
+        // VARIÁVEIS GLOBAIS
+        // ============================================
+        let allPosts = [];
+        let authorsSet = new Set();
+        
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos do DOM
+            const colorOptions = document.querySelectorAll('.color-option');
+            const colorInput = document.getElementById('color');
+            const postForm = document.getElementById('postForm');
+            const clearFormBtn = document.getElementById('clearForm');
+            
+            // Estatísticas
+            const totalPostsEl = document.getElementById('total-posts');
+            const totalImagesEl = document.getElementById('total-images');
+            const totalAuthorsEl = document.getElementById('total-authors');
+            
+            // ============================================
+            // CONFIGURAÇÃO INICIAL
+            // ============================================
+            
+            // Seleção de cores
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    colorInput.value = this.getAttribute('data-color');
+                });
+            });
+            
+            // Limpar formulário
+            clearFormBtn.addEventListener('click', function() {
+                postForm.reset();
+                document.getElementById('imagePreview').style.display = 'none';
+                document.getElementById('imageUrl').value = '';
+                colorOptions.forEach(opt => opt.classList.remove('selected'));
+                colorOptions[0].classList.add('selected');
+                colorInput.value = '#FFEB3B';
+                showNotification('Formulário limpo!', 'info');
+            });
+            
+            // Enviar formulário
+            postForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const author = document.getElementById('author').value.trim();
+                const category = document.getElementById('category').value;
+                const content = document.getElementById('content').value.trim();
+                const color = colorInput.value;
+                const imageUrl = document.getElementById('imageUrl').value.trim();
+                
+                // Validação
+                if (!author || !category || !content) {
+                    showNotification('Preencha todos os campos obrigatórios!', 'error');
+                    return;
+                }
+                
+                // Validar URL da imagem (se fornecida)
+                let finalImageUrl = '';
+                if (imageUrl) {
+                    if (!isValidUrl(imageUrl)) {
+                        showNotification('URL da imagem inválida!', 'error');
+                        return;
+                    }
+                    finalImageUrl = imageUrl;
+                }
+                
+                // Desabilitar botão para evitar múltiplos envios
+                const submitBtn = postForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+                
+                try {
+                    // Salvar no Firestore
+                    await db.collection('avisos').add({
+                        author: author,
+                        category: category,
+                        content: content,
+                        color: color,
+                        imageUrl: finalImageUrl,
+                        createdAt: new Date(),
+                        likes: 0,
+                        views: 0
+                    });
+                    
+                    // Limpar formulário
+                    postForm.reset();
+                    document.getElementById('imagePreview').style.display = 'none';
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    colorOptions[0].classList.add('selected');
+                    colorInput.value = '#FFEB3B';
+                    
+                    showNotification('Aviso publicado com sucesso!', 'success');
+                    
+                } catch (error) {
+                    console.error("Erro:", error);
+                    showNotification('Erro ao publicar aviso. Tente novamente.', 'error');
+                } finally {
+                    // Reabilitar botão
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+            
+            // Configurar filtros
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filter = this.getAttribute('data-filter');
+                    
+                    // Atualizar botões ativos
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Aplicar filtro
+                    applyFilter(filter);
+                });
+            });
+            
+            // ============================================
+            // CARREGAR AVISOS DO FIREBASE
+            // ============================================
+            loadPostsFromFirebase();
+            
+            // ============================================
+            // FUNÇÕES AUXILIARES
+            // ============================================
+            
+            function isValidUrl(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+            
+            async function loadPostsFromFirebase() {
+                try {
+                    // Escutar mudanças em tempo real
+                    db.collection('avisos')
+                        .orderBy('createdAt', 'desc')
+                        .onSnapshot((snapshot) => {
+                            allPosts = [];
+                            authorsSet.clear();
+                            
+                            const mural = document.getElementById('mural');
+                            mural.innerHTML = '';
+                            
+                            if (snapshot.empty) {
+                                mural.innerHTML = `
+                                    <div class="empty-mural">
+                                        <i class="far fa-comment-dots"></i>
+                                        <p>Nenhum aviso ainda. Seja o primeiro a publicar!</p>
+                                        <p><small>Use o formulário à esquerda para criar seu primeiro aviso</small></p>
+                                    </div>
+                                `;
+                                updateStats();
+                                return;
+                            }
+                            
+                            snapshot.forEach((doc) => {
+                                const post = {
+                                    id: doc.id,
+                                    ...doc.data()
+                                };
+                                allPosts.push(post);
+                                authorsSet.add(post.author);
+                                
+                                createPostElement(post);
+                            });
+                            
+                            updateStats();
+                            applyFilter('all');
+                            
+                        }, (error) => {
+                            console.error("Erro ao carregar:", error);
+                            document.getElementById('mural').innerHTML = `
+                                <div class="empty-mural">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <p>Erro ao carregar avisos.</p>
+                                    <p><small>Verifique sua conexão com a internet</small></p>
+                                </div>
+                            `;
+                        });
+                    
+                } catch (error) {
+                    console.error("Erro:", error);
+                }
+            }
+            
+            function createPostElement(post) {
+                const note = document.createElement('div');
+                note.className = 'note';
+                note.style.backgroundColor = post.color || '#FFEB3B';
+                note.id = 'post-' + post.id;
+                note.setAttribute('data-category', post.category.toLowerCase());
+                note.setAttribute('data-has-image', !!post.imageUrl);
+                note.setAttribute('data-is-urgent', post.color === '#FF8A65');
+                
+                if (post.imageUrl) {
+                    note.classList.add('has-image');
+                }
+                
+                // Formatar data
+                const date = post.createdAt?.toDate ? post.createdAt.toDate() : new Date(post.createdAt);
+                const dateString = date.toLocaleDateString('pt-BR');
+                const timeString = date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                const timeAgo = getTimeAgo(date);
+                
+                note.innerHTML = `
+                    ${post.imageUrl ? `<img class="note-image" src="${post.imageUrl}" alt="Imagem do aviso" loading="lazy" onerror="this.style.display='none'">` : ''}
+                    <div class="note-header">
+                        <div class="note-author">${post.author}</div>
+                        <div class="note-category">${post.category}</div>
+                    </div>
+                    <div class="note-content">${post.content}</div>
+                    <div class="note-date">${dateString} às ${timeString} (${timeAgo})</div>
+                    <div class="note-actions">
+                        <button class="action-btn" onclick="likePost('${post.id}')" title="Curtir">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        <button class="action-btn" onclick="deletePost('${post.id}')" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('mural').appendChild(note);
+            }
+            
+            function getTimeAgo(date) {
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 1) return 'agora mesmo';
+                if (diffMins < 60) return `${diffMins} min atrás`;
+                if (diffHours < 24) return `${diffHours}h atrás`;
+                if (diffDays === 1) return 'ontem';
+                if (diffDays < 7) return `${diffDays} dias atrás`;
+                return `${Math.floor(diffDays/7)} sem atrás`;
+            }
+            
+            function applyFilter(filter) {
+                const notes = document.querySelectorAll('.note');
+                let visibleCount = 0;
+                
+                notes.forEach(note => {
+                    const hasImage = note.getAttribute('data-has-image') === 'true';
+                    const isUrgent = note.getAttribute('data-is-urgent') === 'true';
+                    const category = note.getAttribute('data-category');
+                    
+                    let shouldShow = true;
+                    
+                    switch(filter) {
+                        case 'all':
+                            shouldShow = true;
+                            break;
+                        case 'image':
+                            shouldShow = hasImage;
+                            break;
+                        case 'urgent':
+                            shouldShow = isUrgent;
+                            break;
+                        case 'meeting':
+                            shouldShow = category.includes('reunião') || category.includes('🔄');
+                            break;
+                        default:
+                            shouldShow = true;
+                    }
+                    
+                    note.style.display = shouldShow ? 'flex' : 'none';
+                    if (shouldShow) visibleCount++;
+                });
+                
+                // Mostrar mensagem se não houver posts visíveis
+                const mural = document.getElementById('mural');
+                const existingEmpty = document.querySelector('.empty-mural');
+                
+                if (visibleCount === 0 && allPosts.length > 0) {
+                    if (existingEmpty) existingEmpty.remove();
+                    
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'empty-mural';
+                    emptyMsg.innerHTML = `
+                        <i class="fas fa-filter"></i>
+                        <p>Nenhum aviso encontrado com este filtro.</p>
+                        <button onclick="document.querySelector('.filter-btn[data-filter=\"all\"]').click()" 
+                                style="margin-top: 10px; padding: 8px 20px; background: #1e3c72; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Ver todos os avisos
+                        </button>
+                    `;
+                    mural.appendChild(emptyMsg);
+                } else if (existingEmpty && visibleCount > 0) {
+                    existingEmpty.remove();
+                }
+            }
+            
+            function updateStats() {
+                document.getElementById('total-posts').textContent = allPosts.length;
+                document.getElementById('total-images').textContent = allPosts.filter(p => p.imageUrl).length;
+                document.getElementById('total-authors').textContent = authorsSet.size;
+            }
+        });
+        
+        // ============================================
+        // FUNÇÕES GLOBAIS
+        // ============================================
+        
+        // Pré-visualizar imagem por URL
+        window.previewImageUrl = function() {
+            const urlInput = document.getElementById('imageUrl');
+            const url = urlInput.value.trim();
+            const previewDiv = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImage');
+            
+            if (!url) {
+                showNotification('Digite uma URL de imagem', 'error');
+                return;
+            }
+            
+            // Validar URL
+            if (!url.startsWith('http')) {
+                showNotification('URL deve começar com http:// ou https://', 'error');
+                return;
+            }
+            
+            // Tentar carregar a imagem
+            previewImg.src = url;
+            previewDiv.style.display = 'block';
+            
+            previewImg.onload = function() {
+                showNotification('Imagem carregada com sucesso!', 'success');
+            };
+            
+            previewImg.onerror = function() {
+                showNotification('Não foi possível carregar a imagem. Verifique a URL.', 'error');
+                previewDiv.style.display = 'none';
+            };
+        };
+        
+        // Remover pré-visualização
+        window.removeImagePreview = function() {
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('imageUrl').value = '';
+        };
+        
+        // Curtir post
+        window.likePost = async function(postId) {
+            try {
+                const postRef = db.collection('avisos').doc(postId);
+                const postDoc = await postRef.get();
+                
+                if (postDoc.exists) {
+                    const currentLikes = postDoc.data().likes || 0;
+                    await postRef.update({
+                        likes: currentLikes + 1
+                    });
+                    
+                    // Atualizar visualmente
+                    const heartIcon = document.querySelector(`#post-${postId} .fa-heart`);
+                    if (heartIcon) {
+                        heartIcon.classList.remove('far');
+                        heartIcon.classList.add('fas');
+                        heartIcon.style.color = '#e74c3c';
+                        showNotification('Curtido!', 'success');
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao curtir:", error);
+                showNotification('Erro ao curtir', 'error');
+            }
+        };
+        
+        // Excluir post
+        window.deletePost = async function(postId) {
+            if (!confirm('Tem certeza que deseja excluir este aviso?')) {
+                return;
+            }
+            
+            try {
+                await db.collection('avisos').doc(postId).delete();
+                showNotification('Aviso excluído!', 'success');
+            } catch (error) {
+                console.error("Erro ao excluir:", error);
+                showNotification('Erro ao excluir', 'error');
+            }
+        };
+        
+        // Mostrar notificação
+        window.showNotification = function(message, type = 'info') {
+            // Remover notificação anterior
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => existingNotification.remove(), 300);
+            }
+            
+            // Criar nova notificação
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remover após 3 segundos
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
