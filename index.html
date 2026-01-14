@@ -11,6 +11,22 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <style>
+
+         .header-container2 {
+             /* Fundo sólido para o cabeçalho */
+            background-color: white;
+            width: 100%;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center; /* Centraliza logo e títulos */
+            align-items: center;
+            flex-direction: column;
+            /* Cantos arredondados na parte inferior */
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+         }
         * {
             margin: 0;
             padding: 0;
@@ -522,6 +538,11 @@
 <body>
     <div class="container">
         <header>
+            <div class="header-container2">
+        <img class="logo" src="imagem/78f05240-06d7-4c17-a2ec-4f31e905b923.png" alt="Logo Prefeitura">
+       
+    </div> 
+    
             <h1><i class="fas fa-bullhorn"></i> Mural de Avisos da Empresa</h1>
             <p class="subtitle">Compartilhe avisos importantes com toda a equipe. Acessível em PC, Notebook e Celular.</p>
             <div class="stats">
